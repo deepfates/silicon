@@ -2,16 +2,16 @@ import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Set
 
 // Remember to rename these classes and interfaces!
 
-interface MyPluginSettings {
-	mySetting: string;
+interface SiliconSettings {
+	apiKey: string;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
+const DEFAULT_SETTINGS: SiliconSettings = {
+	apiKey: 'default'
 }
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class Silicon extends Plugin {
+	settings: SiliconSettings;
 
 	async onload() {
 		await this.loadSettings();
@@ -21,6 +21,7 @@ export default class MyPlugin extends Plugin {
 			// Called when the user clicks the icon.
 			new Notice('This is a notice!');
 		});
+
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
@@ -108,9 +109,9 @@ class SampleModal extends Modal {
 }
 
 class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
+	plugin: Silicon;
 
-	constructor(app: App, plugin: MyPlugin) {
+	constructor(app: App, plugin: Silicon) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -123,14 +124,14 @@ class SampleSettingTab extends PluginSettingTab {
 		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
 
 		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
+			.setName('OpenAI API key')
+			.setDesc('You can get this from https://openai.com')
 			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
+				.setPlaceholder('Enter your key')
+				.setValue(this.plugin.settings.apiKey)
 				.onChange(async (value) => {
-					console.log('Secret: ' + value);
-					this.plugin.settings.mySetting = value;
+					console.log('Key: ' + value);
+					this.plugin.settings.apiKey = value;
 					await this.plugin.saveSettings();
 				}));
 	}
