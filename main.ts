@@ -1,58 +1,24 @@
-import { App, Notice, Plugin, PluginSettingTab, Setting, } from 'obsidian';
+import { Notice, Plugin, } from 'obsidian';
 import { embedText } from 'src/api';
 import { KeyValueDatabase, VectorDatabase} from 'src/db'
 import { SiliconView, VIEW_TYPE_SILICON } from 'src/view';
+import { SiliconSettings, SiliconSettingTab, DEFAULT_SETTINGS } from './src/settings';
 
-// This is the settings interface that is used to store the API key
-interface SiliconSettings {
-	apiKey: string;
-};
-
-const DEFAULT_SETTINGS: SiliconSettings = {
-	apiKey: 'YOUR_API_KEY_HERE'
-};
-class SiliconSettingTab extends PluginSettingTab {
-	plugin: Silicon;
-
-	constructor(app: App, plugin: Silicon) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
-
-	display(): void {
-		const {containerEl} = this;
-
-		containerEl.empty();
-
-		containerEl.createEl('h2', {text: 'Settings for my awesome plugin.'});
-
-		new Setting(containerEl)
-			.setName('OpenAI API key')
-			.setDesc('You can get this from https://openai.com')
-			.addText(text => text
-				.setPlaceholder('Enter your key')
-				.setValue(this.plugin.settings.apiKey)
-				.onChange(async (value) => {
-					console.log('Key: ' + value);
-					this.plugin.settings.apiKey = value;
-					await this.plugin.saveSettings();
-				}));
-	}
-}
-
-// This is the location of the index file
-const index_loc = '/.obsidian/plugins/silicon/silicon.json';
-
-// This is the plugin itself
 export default class Silicon extends Plugin {
 	settings: SiliconSettings;
+	status: HTMLElement;
 	db: VectorDatabase;
 	fileIndex: KeyValueDatabase;
 	indexLock: boolean;
+	neighborIndex: KeyValueDatabase;
 
 	async onload() {
-		console.log('loading plugin');
+		// console.log('loading plugin');
 		await this.loadSettings();
+		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
+		this.status = this.addStatusBarItem();
+		this.status.setText('⛰');
+
 		// Check for an API key
 		if (this
 			.settings
@@ -63,8 +29,9 @@ export default class Silicon extends Plugin {
 		}
 
 		// Initialize the index
-		this.db = new VectorDatabase();
-		this.fileIndex = new KeyValueDatabase();
+		this.db = new VectorDatabase(simpleHash(this.app.vault.getRoot().path + 'db'));
+		this.fileIndex = new KeyValueDatabase(simpleHash(this.app.vault.getRoot().path + 'FileIndex'));
+		this.neighborIndex = new KeyValueDatabase(simpleHash(this.app.vault.getRoot().path + 'NeighborIndex'));
 		this.indexLock = false;
 		
 		// Index on start up
@@ -73,10 +40,13 @@ export default class Silicon extends Plugin {
 		// Initialize the view
 		this.registerView(
 			VIEW_TYPE_SILICON,
-			(leaf) => new SiliconView(leaf, [])
+			(leaf) => new SiliconView(leaf, [], this.settings.threshold)
 		);
-		this.activateView();
-		this.updateView();
+		this.app.workspace.onLayoutReady(() => {
+			this.activateView();
+			this.updateView();
+		});
+		
 		this.addCommand({
 			id: 'silicon-view',
 			name: 'Open Silicon',
@@ -85,16 +55,17 @@ export default class Silicon extends Plugin {
 			}
 		});
 		
+		
 		this.addRibbonIcon("mountain", "Activate view", () => {
 			this.activateView();
 		  });
 
 		// Watch the vault for changes
 		this.app.vault.on('modify', (file) => {
-				console.log('Vault modified, reindexing');
+				// console.log('Vault modified, reindexing');
 				this.indexVault();
 		});
-				
+			
 
 		// whenever this.workspace.getActiveFile() changes, update the view
 		this.registerEvent(
@@ -102,9 +73,8 @@ export default class Silicon extends Plugin {
 				this.updateView();
 			})
 		);
-
-
-	
+			
+		// Userspace commands
 		this.addCommand({
 			id: 'index-vault',
 			name: 'Index vault',
@@ -127,19 +97,24 @@ export default class Silicon extends Plugin {
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SiliconSettingTab(this.app, this));
+		
 	}
 
 		onunload() {
-			console.log('unloading plugin');   
+			// console.log('unloading plugin');
+			this.status.setText('Silicon unloaded');
+			this.status.remove();   
  			this.app.workspace.detachLeavesOfType(VIEW_TYPE_SILICON);
 
 	}
 
 	// Various necessary functions that do not get called automatically on load
 	// These are called by the plugin itself
+
+	// View functions
 	async activateView() {
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_SILICON);
-	
+		
 		await this.app.workspace.getRightLeaf(false).setViewState({
 		  type: VIEW_TYPE_SILICON,
 		  active: true,
@@ -151,8 +126,10 @@ export default class Silicon extends Plugin {
 	  }
 
 	async updateView() {
+		this.status.setText('꩜');
 		const results = await this.searchIndex();
 				if (results) {
+					// console.log(results)
 					// find the SiliconView
 					const view = this.app.workspace.getLeavesOfType(VIEW_TYPE_SILICON)[0]?.view;
 					if (view instanceof SiliconView) {
@@ -162,6 +139,7 @@ export default class Silicon extends Plugin {
 			}
 	}
 
+	// Settings functions
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
@@ -169,6 +147,7 @@ export default class Silicon extends Plugin {
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
+
 	// This function indexes the vault
 	// It embeds each file's text with the OpenAI API
 	// and hashes the file's text to use as the key
@@ -179,7 +158,8 @@ export default class Silicon extends Plugin {
 			return;
 		}
 		this.indexLock = true;
-		
+		// console.log('Indexing vault');
+		this.status.setText('Indexing vault');
 		// Get all files in the vault
 		const files = this.app.vault.getMarkdownFiles();
 		if (files.length == 0) {
@@ -194,7 +174,8 @@ export default class Silicon extends Plugin {
 			this.fileIndex.set(fileHash, file.path);
 			
 			if (await this.db.hasKey(fileHash) == false) {
-				console.log('Embedding ' + file.path)
+				// console.log('Embedding ' + file.path)
+				this.status.setText('Embedding ' + file.path);
 				const embedding = await embedText(fileText, this.settings.apiKey);
 				this.db.updateVector(fileHash, embedding);
 				// add fileHash to fileIndex
@@ -206,13 +187,17 @@ export default class Silicon extends Plugin {
 		const keys = await this.db.getAllKeys();
 		for (const key of keys) {
 			if (this.fileIndex.get(String(key)) == undefined) {
-				console.log('Removing ' + key);
+				// console.log('Removing ' + key);
+				this.status.setText('Removing ' + key);
 				this.db.removeVector(String(key));
 			}
 		}
 
 		// Unlock the index
 		this.indexLock = false;
+		// console.log('Indexing complete');
+		this.status.setText('⛰');
+		// console.log(this)
 	}
 
 	// This function returns the file paths of the similar files
@@ -222,7 +207,8 @@ export default class Silicon extends Plugin {
 	async searchIndex() {
 		const file = this.app.workspace.getActiveFile();
 		if(!file) {
-			console.log('No active file');
+			// console.log('No active file');
+			this.status.setText('No active file');
 			return;
 		}
 
@@ -231,23 +217,31 @@ export default class Silicon extends Plugin {
 
 		// if the file is not in the database, embed it
 		if (await this.db.hasKey(fileHash) == false) {
-			console.log('Embedding ' + file.path)
+			// console.log('Embedding ' + file.path)
+			this.status.setText('Embedding ' + file.path);
 			const embedding = await embedText(fileText, this.settings.apiKey);
 			this.db.updateVector(fileHash, embedding);
 			this.fileIndex.set(fileHash, file.path);
 		}
 
-		// Get the embedding of the file
 		const embedding = await this.db.readVector(fileHash);
 		// Get the similar files
-		const similarEmbeds = await this.db.search(embedding, 10);
-		let keys = similarEmbeds.map(embed => embed.key);
+		const similarEmbeds = await this.db.search(embedding, 50);
+		// store the embeds in the neighborIndex
+		this.neighborIndex.set(fileHash, similarEmbeds);	
 		// Remove the file itself from the similar files
-		keys = keys.filter(key => key != fileHash);
+		const embeds = similarEmbeds.filter(embed => embed.key != fileHash);
 		// Accumulate the file paths of the similar files
 		let results = [];
-		for (const key of keys) {
-			results.push(await this.fileIndex.get(key));
+		for (const e of embeds) {
+			// don't add if it's below the similarity threshold
+			if (e.similarity < this.settings.threshold) {
+				continue;
+			}
+			const path = await this.fileIndex.get(e.key);
+			if (path) {
+				results.push({path: path, similarity: e.similarity});
+			}
 		}
 
 		// Filter out results that are undefined
