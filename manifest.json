@@ -1,9 +1,9 @@
 {
 	"id": "obsidian silicon",
-	"name": "Silicon AI Search",
+	"name": "Silicon AI",
 	"version": "1.0.0",
-	"minAppVersion": "0.15.0",
-	"description": "Search your notes with AI",
+	"minAppVersion": "1.0.0",
+	"description": "Add some intelligence to your notes with Silicon AI",
 	"author": "deepfates",
 	"authorUrl": "https://deepfates.com",
 	"fundingUrl": "https://openai.com/api/pricing/",
