@@ -6,7 +6,7 @@ All you need is an OpenAI API key (which you can get at https://beta.openai.com/
 
 -  Download the plugin from the releases page (https://github.com/your-username/silicon/releases).
 -  Extract the downloaded file and move the extracted folder to the Obsidian plugins directory. The location of this directory may vary depending on your operating system.
--  Open Obsidian and go to the settings page (File > Settings).
+-  Open Obsidian and go to the settings page
 -  Under the "Community Plugins" tab, enable community plugins and then enable Silicon.
 -  Go to the "Silicon" tab in the Obsidian settings page and enter your OpenAI API key.
 -  Click "Save" to save your changes.
