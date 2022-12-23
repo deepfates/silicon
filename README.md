@@ -1,6 +1,19 @@
-# Obsidian Sample Plugin
+# Silicon: AI for Obsidian
 
-This is a sample plugin for Obsidian (https://obsidian.md).
+This is a plugin for Obsidian (https://obsidian.md). It adds a panel that connects your notes using text embeddings from the OpenAI API.
+
+All you need is an OpenAI API key (which you can get at https://beta.openai.com/signup). Once you have your API key, you can install the plugin by following these steps:
+
+-  Download the plugin from the releases page (https://github.com/your-username/silicon/releases).
+-  Extract the downloaded file and move the extracted folder to the Obsidian plugins directory. The location of this directory may vary depending on your operating system.
+-  Open Obsidian and go to the settings page (File > Settings).
+-  Under the "Community Plugins" tab, enable community plugins and then enable Silicon.
+-  Go to the "Silicon" tab in the Obsidian settings page and enter your OpenAI API key.
+-  Click "Save" to save your changes.
+-  Now you can use Silicon to connect your notes by clicking the "Silicon" button in the panel on the right side of the Obsidian window. The plugin will use text embeddings to find related notes and display them in the panel.
+
+
+-----
 
 This project uses Typescript to provide type checking and documentation.
 The repo depends on the latest plugin API (obsidian.d.ts) in Typescript Definition format, which contains TSDoc comments describing what it does.
