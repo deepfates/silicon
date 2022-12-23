@@ -253,6 +253,11 @@ export default class Silicon extends Plugin {
 			}
 			this.status.setText('⛰');
 			this.status.setAttr('title', 'Silicon ready');
+		} else {
+			// It may have been searched already. Check if it has a neighbors field
+			if (value.neighbors) {
+				return value.neighbors;
+			}
 		}
 		
 		// Search the index for similar files
@@ -277,8 +282,15 @@ export default class Silicon extends Plugin {
 			}
 		}
 		// console.log(results)
-
+		// filter out undefined
 		results = results.filter(result => result != undefined);
+		// filter out this file
+		results = results.filter(result => result.path != file.path);
+		// add these results to the file in db
+		const fileValue = await this.db.get('files', key);
+		fileValue.neighbors = results;
+		await this.db.put('files', fileValue, key);
+		
 		return results;
 
 	}
