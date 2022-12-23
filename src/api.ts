@@ -62,18 +62,29 @@ export async function getEmbeddings(strings: string[], apiKey: string) {
 // If the text is empty, we skip it
 // If the text is already in the database, but the text has changed, we re-embed it
 
-export async function embedText(text: string, apiKey: string): Promise<Float32Array> {
-
-	let chunks = [text];
-	if (text.length > 2000) {
-		// Split the text into an array of chunks no more than 2000 characters long
-		chunks = text.match(/.{1,2000}/g) || [];
+export async function embedText(text: string, apiKey: string): Promise<Float32Array > {
+	// If the text is empty, skip it
+	if (text === '') {
+		return new Float32Array(1536);
 	}
-
+	let chunks = [text];
+	// If the text is too long, split it into chunks of 2000 characters
+	if (text.length > 2000) {
+		chunks = [];
+		let chunk = '';
+		for (let i = 0; i < text.length; i++) {
+			chunk += text[i];
+			if (i % 2000 === 0) {
+				chunks.push(chunk);
+				chunk = '';
+			}
+		}
+	}
+	
 	const resp = await getEmbeddings(chunks, apiKey);
 
 	let embedding = [];
-	if (chunks.length <= 1) {
+	if (chunks.length === 1) {
 		embedding = resp.data[0].embedding
 	} else {
 	let allEmbeddings: number[][] = resp.data.map((item: any) => item.embedding);
@@ -85,7 +96,5 @@ export async function embedText(text: string, apiKey: string): Promise<Float32Ar
 
 	// convert to Float32Array
 	embedding = embedding.map((item: number) => parseFloat(item.toFixed(6)));
-
-	return embedding
-	
+	return new Float32Array(embedding);	
 }

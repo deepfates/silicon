@@ -36,17 +36,17 @@ export class SiliconView extends ItemView {
       // Get the list of embeds
       const container = this.containerEl.children[1];
       container.empty();
+      const outerDiv = container.createEl("div", { cls: "outgoing-link-pane node-insert-event"});
       // console.log(embeds)
       if (embeds === undefined) {
-        container.createEl("div", { text: "There was an error" });
+        outerDiv.createEl("div", { text: "There was an error" });
         return;
       }
       if (embeds.length === 0) {
-        container.createEl("div", { text: "No results" });
+        outerDiv.createEl("div", { text: "⛰" });
         return;
       }
       // Create a link for each path
-      const outerDiv = container.createEl("div", { cls: "outgoing-link-pane node-insert-event"});
       outerDiv.createEl("div", { cls: "outgoing-link-header", text: "⛰" });
       outerDiv.createEl("br")
       const resultsDiv = outerDiv.createEl("div", { cls: "search-result-container" });

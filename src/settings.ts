@@ -59,6 +59,21 @@ export class SiliconSettingTab extends PluginSettingTab {
 				)
 				.setDynamicTooltip()
 			);
+
+		new Setting(containerEl)
+			.setName('Wipe index')
+			.setDesc('Wipe the index and re-index the vault')
+			.addButton(button => button
+				.setButtonText('Wipe index')
+				.onClick(async () => {
+					this.plugin.status.setText('Wiping index...');
+					this.plugin.db.clear('files');
+					this.plugin.indexVault();
+					this.display();
+				}
+				)
+			);
+			
 	}
 
 }
