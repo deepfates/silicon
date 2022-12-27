@@ -7,8 +7,8 @@ This is a plugin for Obsidian (https://obsidian.md). It adds a panel that connec
 All you need is an OpenAI API key (which you can get at https://beta.openai.com/signup). Once you have your API key, you can install the plugin by following these steps:
 
 - Find the latest release on the releases page (https://github.com/deepfates/silicon/releases).
-- Download the files main.js, manifest.json, and styles.css
-- Make a silicon folder in the Obsidian plugins directory. The location of this directory may vary depending on your operating system, but it's usually in [your vault]/.obsidian/plugins
+- Download the files `main.js`, `manifest.json`, and `styles.css`
+- Make a silicon folder in the Obsidian plugins directory. The location of this directory may vary depending on your operating system, but it's usually in `[your vault]/.obsidian/plugins`
 - Copy the downloaded files to your new silicon folder
 -  Open Obsidian and go to the settings page
 -  Under the "Community Plugins" tab, enable community plugins and then enable Silicon.
