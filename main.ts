@@ -11,6 +11,7 @@ export default class Silicon extends Plugin {
 	status: HTMLElement;
 	indexLock: boolean;
 	db: idb.IDBPDatabase;
+	ignoreFolders: string[];
 
 	async onload() {
 		// console.log('loading plugin');
@@ -176,14 +177,25 @@ export default class Silicon extends Plugin {
 		this.status.setAttr('title', 'Silicon indexing vault...');
 		// Get all files in the vault
 		const files = this.app.vault.getMarkdownFiles();
-		if (files.length == 0) {
+		
+
+		// Remore viles that are in folders in the ignore list
+		const filesToIndex = files.filter(file => {
+			for (const folder of this.settings.ignoreFolders) {
+				if (file.path.includes(folder)) {
+					return false;
+				}
+			}
+			return true;
+		});
+		
+		if (filesToIndex.length == 0) {
 			return;
 		}
-
 		// Embed each file's text with the OpenAI API
 		// if the file isn't already in the db
 		// or if it has changed since it was last indexed
-		for (const file of files) {
+		for (const file of filesToIndex) {
 
 			const text = await this.app.vault.read(file);
 			const key = file.path

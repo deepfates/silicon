@@ -1,17 +1,17 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import Silicon from '../main';
-// @ts-ignore
-import { Plotly } from 'plotly';
 
 // This is the settings interface that is used to store the API key
 export interface SiliconSettings {
 	apiKey: string;
 	threshold: number;
+	ignoreFolders: string[];
 }
 ;
 export const DEFAULT_SETTINGS: SiliconSettings = {
 	apiKey: 'YOUR_API_KEY_HERE',
-	threshold: 0.5
+	threshold: 0.5,
+	ignoreFolders: ['']
 };
 export class SiliconSettingTab extends PluginSettingTab {
 	plugin: Silicon;
@@ -59,6 +59,19 @@ export class SiliconSettingTab extends PluginSettingTab {
 				)
 				.setDynamicTooltip()
 			);
+
+		// Setting to select folders to ignore
+		new Setting(containerEl)
+			.setName('Ignore folders')
+			.setDesc('Select folders to ignore')
+			.addText(text => text
+				.setPlaceholder('Enter folder names separated by commas')
+				.setValue(this.plugin.settings.ignoreFolders.join(','))
+				.onChange(async (value) => {
+					// console.log('Folders: ' + value);
+					this.plugin.settings.ignoreFolders = value.split(',');
+					await this.plugin.saveSettings();
+				}));
 
 		new Setting(containerEl)
 			.setName('Wipe index')
