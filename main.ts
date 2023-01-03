@@ -298,6 +298,22 @@ export default class Silicon extends Plugin {
 		results = results.filter(result => result != undefined);
 		// filter out this file
 		results = results.filter(result => result.path != file.path);
+		// filter out files that backlink to this file
+		const links = await this.app.metadataCache.resolvedLinks;
+		const thisFileLinks = links[file.path];
+		if (thisFileLinks) {
+			console.log(thisFileLinks)
+			results = results.filter(result => !thisFileLinks[result.path]);
+		}
+		// we get a Record<string, Record<string, number>> back
+		// representing the links from each file to any other files within, and how many times
+		// we want to find the key of any record with a key that matches the current file
+		const backlinks = Object.keys(links).filter(key => links[key][file.path] != undefined);
+		if (backlinks) {
+			console.log(backlinks)
+			results = results.filter(result => !backlinks.includes(result.path));
+		}
+		console.log(results)
 		// add these results to the file in db
 		const fileValue = await this.db.get('files', key);
 		fileValue.neighbors = results;
