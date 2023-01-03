@@ -302,7 +302,7 @@ export default class Silicon extends Plugin {
 		const links = await this.app.metadataCache.resolvedLinks;
 		const thisFileLinks = links[file.path];
 		if (thisFileLinks) {
-			console.log(thisFileLinks)
+			// console.log(thisFileLinks)
 			results = results.filter(result => !thisFileLinks[result.path]);
 		}
 		// we get a Record<string, Record<string, number>> back
@@ -310,10 +310,10 @@ export default class Silicon extends Plugin {
 		// we want to find the key of any record with a key that matches the current file
 		const backlinks = Object.keys(links).filter(key => links[key][file.path] != undefined);
 		if (backlinks) {
-			console.log(backlinks)
+			// console.log(backlinks)
 			results = results.filter(result => !backlinks.includes(result.path));
 		}
-		console.log(results)
+		// console.log(results)
 		// add these results to the file in db
 		const fileValue = await this.db.get('files', key);
 		fileValue.neighbors = results;
