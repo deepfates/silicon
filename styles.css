@@ -6,3 +6,15 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+
+.outgoing-link-pane {
+  padding: 0;
+}
+
+.tree-item-self {
+  text-decoration: none;
+}
+
+.tree-item-self:hover {
+  text-decoration: none;
+}

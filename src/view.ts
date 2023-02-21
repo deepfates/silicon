@@ -29,7 +29,9 @@ export class SiliconView extends ItemView {
     this.update(this.embeds)
   }
 
-  async update(embeds: { path: string, similarity: number }[]) {
+  async update(rawEmbeds: { path: string, similarity: number }[]) {
+    const embeds = rawEmbeds.filter(embed => !isNaN(embed.similarity));
+
     // console.log("Updating view")
     // THis is called when the view is opened, or when the user switches to another file
     // We want to search again, and update the view
@@ -47,17 +49,16 @@ export class SiliconView extends ItemView {
         return;
       }
       // Create a link for each path
-      outerDiv.createEl("div", { cls: "outgoing-link-header", text: "⛰" });
-      outerDiv.createEl("br")
       const resultsDiv = outerDiv.createEl("div", { cls: "search-result-container" });
       // get the top value
       const topValue = embeds[0].similarity;
       for (const embed of embeds) {
         const [path, similarity] = [embed.path, embed.similarity];
+
         const opacity = sCurve(similarity, this.threshold, topValue);
         const link = resultsDiv.createEl("a", { href: path, cls: "tree-item-self is-clickable outgoing-link-item", attr: { "data-path": path } });
         link.createEl("span", {   
-                  text: path.split("/").pop()?.split(".md")[0],
+                  text: path.split("/").pop()?.split(".md")[0] + " (" + similarity.toPrecision(2) + ")",
                   cls: "tree-item-inner",
                   // show similarity in hover tooltip
                   attr: { title: `Similarity: ${similarity.toPrecision(2)}, Opacity: ${opacity.toPrecision(2)}`, style: `opacity: ${opacity}` }
