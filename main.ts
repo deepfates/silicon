@@ -24,14 +24,13 @@ export default class Silicon extends Plugin {
 		if (this
 			.settings
 			.apiKey
-			.includes
-			('YOUR_API_KEY_HERE')) {
-			new Notice('You need to set your OpenAI API key in the settings tab for Silicon AI to work.');
+			.length === 0) {
+			this.status.setText('You need to set an API key in the settings');
 		}
 
 		//initialize the database mapping hile hashes to file paths and embeddings
 		// @ts-ignore
-		const dbName = app.appId + '-silicon';
+		const dbName = this.app.appId + '-silicon';
 		this.db = await idb.openDB(dbName, 1, {
 			upgrade(db) {
 				db.createObjectStore('files');
@@ -57,7 +56,7 @@ export default class Silicon extends Plugin {
 		});
 		
 		
-		this.addRibbonIcon("mountain", "Activate view", () => {
+		this.addRibbonIcon("mountain", "Open Silicon", () => {
 			this.activateView();
 		  });
 
@@ -208,7 +207,7 @@ export default class Silicon extends Plugin {
 		// or if it has changed since it was last indexed
 		for (const file of filesToIndex) {
 
-			const text = await this.app.vault.read(file);
+			const text = await this.app.vault.cachedRead(file);
 			const key = file.path
 			const value = await this.db.get('files', key);
 			if (value && value.mtime == file.stat.mtime) {
