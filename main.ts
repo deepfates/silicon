@@ -65,17 +65,28 @@ export default class Silicon extends Plugin {
 		this.app.workspace.onLayoutReady(() => {
 			this.indexVault();
 		});
-
+		
 		// Watch the vault for changes
+		this.registerEvent(
 		this.app.vault.on('modify', (file) => {
 				// console.log('Vault modified, reindexing');
 				this.indexVault();
-		});
-			
+		})
+		);
 
 		// whenever this.workspace.getActiveFile() changes, update the view
 		this.registerEvent(
 			this.app.workspace.on('file-open', () => {
+				this.updateView();
+			})
+		);
+		
+		// when a file is deleted, check if it's in the index and remove it
+		this.registerEvent(
+			this.app.vault.on('delete', (file) => {
+				// console.log('File deleted, removing from index');
+				this.db.delete('files', file.path);
+				this.indexVault();
 				this.updateView();
 			})
 		);
@@ -278,6 +289,14 @@ export default class Silicon extends Plugin {
 		} else {
 			// It may have been searched already. Check if it has a neighbors field
 			if (value.neighbors) {
+				// Make sure the neighbors are still in the index
+				// If not, remove them from the neighbors field
+				for (const neighbor of value.neighbors) {
+					const neighborFile = this.app.vault.getAbstractFileByPath(neighbor.path);
+					if (!neighborFile) {
+						value.neighbors.splice(value.neighbors.indexOf(neighbor), 1);
+					}
+				}
 				return value.neighbors;
 			}
 		}
