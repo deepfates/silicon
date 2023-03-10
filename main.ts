@@ -302,6 +302,11 @@ export default class Silicon extends Plugin {
 		
 		// Search the index for similar files
 		const embedding = (await this.db.get('files', key)).embedding;
+		if (!embedding) {
+			// console.log('No embedding');
+			this.status.setText('No embedding');
+			return;
+		}
 		const similarEmbeds = await this.nearestNeighbors(embedding, 53);
 		const embeds = similarEmbeds.filter(embed => embed.key != file.path);
 		// console.log(embeds)
