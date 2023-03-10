@@ -247,6 +247,16 @@ export default class Silicon extends Plugin {
 		
 		const key = file.path
 
+		// Check if the file is in a folder to be ignored
+		// If so, don't search the index
+		for (const folder of this.settings.ignoreFolders) {
+			if (file.path.includes(folder)) {
+				// console.log('File is in an ignored folder');
+				this.status.setText('File is in an ignored folder');
+				return;
+			}
+		}
+
 		// Check if the file is already in the index
 		// And if it has changed since it was last indexed
 		// If not, embed the file's text and add it to the index
@@ -318,7 +328,7 @@ export default class Silicon extends Plugin {
 		await this.db.put('files', fileValue, key);
 		
 		return results;
-
+ 
 	}
 
 	// This function returns the k nearest neighbors of the embedding
