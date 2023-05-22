@@ -40,7 +40,7 @@ export default class Silicon extends Plugin {
 		// Initialize the view
 		this.registerView(
 			VIEW_TYPE_SILICON,
-			(leaf) => new SiliconView(leaf, [], this.settings.threshold)
+			(leaf) => new SiliconView(leaf, [], this)
 		);
 		this.app.workspace.onLayoutReady(() => {
 			this.activateView();

@@ -1,20 +1,21 @@
+import Silicon from "main";
 import { ItemView, WorkspaceLeaf } from "obsidian";
 
 export const VIEW_TYPE_SILICON = "silicon-view";
 
 export class SiliconView extends ItemView {
   embeds: { path: string, similarity: number }[];
-  threshold: number;
+  plugin: Silicon
   ribbonName: string;
   ribbonIcon: string;
   
-  constructor(leaf: WorkspaceLeaf, embeds: { path: string, similarity: number }[], threshold: number = 0.85) {
+  constructor(leaf: WorkspaceLeaf, embeds: { path: string, similarity: number }[], plugin: Silicon) {
     super(leaf);
     this.ribbonName = 'Silicon';
     this.ribbonIcon = 'mountain';
     this.getIcon = () => this.ribbonIcon;
     this.embeds = embeds;
-    this.threshold = threshold;
+    this.plugin = plugin;
   }
 
   getViewType() {
@@ -54,7 +55,7 @@ export class SiliconView extends ItemView {
       const topValue = embeds[0].similarity;
       for (const embed of embeds) {
         const [path, similarity] = [embed.path, embed.similarity];
-        const opacity = sCurve(similarity, this.threshold, topValue);
+        const opacity = sCurve(similarity, this.plugin.settings.threshold, topValue);
         const link = resultsDiv.createEl("a", { href: path, cls: "tree-item-self is-clickable outgoing-link-item", attr: { "data-path": path } });
         link.createEl("span", {   
                   text: path.split("/").pop()?.split(".md")[0],
