@@ -16,6 +16,7 @@ All you need is an OpenAI API key (which you can get at https://beta.openai.com/
 -  Click "Save" to save your changes.
 -  Now you can use Silicon to connect your notes by clicking the "Silicon" button in the panel on the right side of the Obsidian window. The plugin will use text embeddings to find related notes and display them in the panel.
 
+![Silicon Screenshot](silicon-screenshot.png)
 
 -----
 
