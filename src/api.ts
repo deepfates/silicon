@@ -62,39 +62,50 @@ export async function getEmbeddings(strings: string[], apiKey: string) {
 // If the text is empty, we skip it
 // If the text is already in the database, but the text has changed, we re-embed it
 
-export async function embedText(text: string, apiKey: string): Promise<Float32Array > {
-	// If the text is empty, skip it
-	if (text === '') {
-		return new Float32Array(1536);
-	}
-	let chunks = [text];
-	// If the text is too long, split it into chunks of 2000 characters
-	if (text.length > 2000) {
-		chunks = [];
-		let chunk = '';
-		for (let i = 0; i < text.length; i++) {
-			chunk += text[i];
-			if (i % 2000 === 0) {
-				chunks.push(chunk);
-				chunk = '';
-			}
+export async function embedText(basename: string, text: string, apiKey: string): Promise<Float32Array > {
+	const input_chunks = [basename, "\n", text];
+	const output_chunks = [];
+
+
+	const MAX_CHUNK_LENGTH = 2000;
+	const output_chunk_parts = [];
+	let remaining_output_chunk_length = MAX_CHUNK_LENGTH;
+	for (const input_chunk of input_chunks) {
+		let input_chunk_start = 0;
+
+		while (input_chunk.length - input_chunk_start > remaining_output_chunk_length) {
+			output_chunk_parts.push(
+				input_chunk.substring(input_chunk_start, input_chunk_start + remaining_output_chunk_length)
+			);
+			output_chunks.push(output_chunk_parts.join(''));
+			output_chunk_parts.length = 0;
+			input_chunk_start += remaining_output_chunk_length;
+			remaining_output_chunk_length = MAX_CHUNK_LENGTH;
+		}
+		const input_chunk_tail_length = input_chunk.length - input_chunk_start;
+		if (input_chunk_tail_length > 0) {
+			output_chunk_parts.push(input_chunk.substring(input_chunk_start));
+			remaining_output_chunk_length -= input_chunk_tail_length;
 		}
 	}
-	
-	const resp = await getEmbeddings(chunks, apiKey);
+	if (output_chunk_parts.length > 0) {
+		output_chunks.push(output_chunk_parts.join(''));
+	}
+
+	const resp = await getEmbeddings(output_chunks, apiKey);
 
 	let embedding = [];
-	if (chunks.length === 1) {
+	if (output_chunks.length === 1) {
 		embedding = resp.data[0].embedding
 	} else {
-	let allEmbeddings: number[][] = resp.data.map((item: any) => item.embedding);
-	embedding = allEmbeddings.reduce((prev: number[], curr: number[]) => {
-		return prev.map((item: number, index: number) => item + curr[index]);
-	}
-	).map((item: number) => item / allEmbeddings.length);
+		let allEmbeddings: number[][] = resp.data.map((item: any) => item.embedding);
+		embedding = allEmbeddings.reduce((prev: number[], curr: number[]) => {
+			return prev.map((item: number, index: number) => item + curr[index]);
+		}
+		).map((item: number) => item / allEmbeddings.length);
 	}
 
 	// convert to Float32Array
 	embedding = embedding.map((item: number) => parseFloat(item.toFixed(6)));
-	return new Float32Array(embedding);	
+	return new Float32Array(embedding);
 }

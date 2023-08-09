@@ -213,7 +213,7 @@ export default class Silicon extends Plugin {
 			if (value && value.mtime == file.stat.mtime) {
 				continue;
 			}
-			const embedding = await embedText(text, this.settings.apiKey);
+			const embedding = await embedText(file.basename, text, this.settings.apiKey);
 			if (embedding) {
 				this.status.setText('Indexing vault: ' + file.basename);
 				const value = {
@@ -274,7 +274,7 @@ export default class Silicon extends Plugin {
 		if (!value || value.mtime != file.stat.mtime) {
 			this.status.setText('Embedding ' + file.basename);
 			const fileText = await this.app.vault.read(file);
-			const embedding = await embedText(fileText, this.settings.apiKey);
+			const embedding = await embedText(file.basename, fileText, this.settings.apiKey);
 			if (embedding) {
 				const value = {
 					mtime: file.stat.mtime,
