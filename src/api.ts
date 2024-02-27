@@ -28,7 +28,7 @@ import axios from 'axios';
 // This function is used to embed an array of strings using OpenAI's API
 // It has perfect error handling
 export async function getEmbeddings(strings: string[], apiKey: string) {
-    const model = 'text-embedding-ada-002'
+    const model = 'text-embedding-3-large'
     const data = {
         "input": strings,
         "model": model
